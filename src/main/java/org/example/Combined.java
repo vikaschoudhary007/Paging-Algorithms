@@ -245,6 +245,91 @@ public class Combined {
         return pageToRemove;
     }
 
+    /** Test Functions **/
+
+    // Test function for generateRandomSequence
+    public static void testGenerateRandomSequence() {
+        // Test input parameters
+        int k = 3;
+        int N = 10;
+        int n = 7;
+        double e = 0.6;
+
+        List<Integer> seq = generateRandomSequence(k, N, n, e);
+        assert seq.size() == n : "Generated random sequence length does not match";
+
+        // Ensure the first k elements are from 1 to k
+        for (int i = 0; i < k; i++) {
+            assert seq.get(i) == i + 1 : "First k elements are not from 1 to k";
+        }
+    }
+
+    // Test case for generateH function
+    public static void testGenerateH() {
+        List<Integer> seq = List.of(1, 2, 3, 4, 14, 14, 14, 19, 4, 19);
+        List<Integer> hSeq = generateH(seq);
+
+        assert hSeq.size() == seq.size() : "Generated hSeq length does not match";
+
+        // Ensure hi values are correct
+        List<Integer> expectedHSeq = List.of(11, 11, 11, 9, 6, 6, 6, 10, 9, 10);
+        assert hSeq.equals(expectedHSeq) : "Generated hSeq values are incorrect";
+    }
+
+    // Test case for addNoise function
+    public static void testAddNoise() {
+        List<Integer> hSeq = List.of(11, 11, 11, 9, 6, 6, 6, 10, 9, 10);
+        double tau = 0.6;
+        int w = 2;
+
+        List<Integer> predictedHSeq = addNoise(hSeq, tau, w);
+
+        assert predictedHSeq.size() == hSeq.size() : "Generated predictedHSeq length does not match";
+
+        // Ensure hi values are within the expected range
+        for (int i = 0; i < hSeq.size(); i++) {
+            int lowerBound = Math.max(i + 1, hSeq.get(i) - w / 2);
+            int upperBound = lowerBound + w;
+            assert lowerBound <= predictedHSeq.get(i) && predictedHSeq.get(i) <= upperBound :
+                    "Generated predictedHSeq values are out of range";
+        }
+    }
+
+    // Test function for blindOracle Algorithm
+    public static void testBlindOracle1() {
+        // Testing for the following input parameters
+        int k = 4;
+        int N = 20;  // N >> k
+        int n = 10;
+        double e = 0.7;
+        double t = 0.2;
+        int w = 2;
+
+        List<Integer> seq = generateRandomSequence(k, N, n, e);
+        List<Integer> hSeq = generateH(seq);
+        List<Integer> noisyHSeq = addNoise(hSeq, t, w);
+
+        int pageFaults = blindOracle(k, seq, noisyHSeq);
+        System.out.println("# pageFaults for k:" + k + " N:" + N + " n:" + n + " e:" + e + " t:" + t + " w:" + w + " = " + pageFaults);
+    }
+
+    public static void testBlindOracle2() {
+        // Testing for the following input parameters
+        int k = 6;
+        int N = 20;  // N >> k
+        int n = 30;
+        double e = 0.9;
+        double t = 0.5;
+        int w = 4;
+
+        List<Integer> seq = generateRandomSequence(k, N, n, e);
+        List<Integer> hSeq = generateH(seq);
+        List<Integer> noisyHSeq = addNoise(hSeq, t, w);
+
+        int pageFaults = blindOracle(k, seq, noisyHSeq);
+        System.out.println("# pageFaults for k:" + k + " N:" + N + " n:" + n + " e:" + e + " t:" + t + " w:" + w + " = " + pageFaults);
+    }
+
 
     /**
      * Main method demonstrating the usage of the functionalities with example parameters.
@@ -253,23 +338,12 @@ public class Combined {
      */
     public static void main(String[] args) {
 
-        int k = 4;
-        int N = 20;
-        int n = 10;
-        double epsilon = 0.6;
+        testGenerateRandomSequence();
+        testGenerateH();
+        testAddNoise();
+        testBlindOracle1();
+        testBlindOracle2();
 
-        double tau = 0.3;
-        int w = 2;
-
-        List<Integer> pageRequest = generateRandomSequence(k, N, n, epsilon);
-        System.out.println("pageRequest : "+pageRequest);
-        List<Integer> hSequence = generateH(pageRequest);
-        System.out.println("hSequence : " + hSequence);
-        List<Integer> predicted_hSequence = addNoise(hSequence, tau, w);
-        System.out.println("predicted_hSequence : "+predicted_hSequence);
-
-        System.out.println("**********blindOracle************");
-        System.out.println("pageFaults : "+blindOracle(k, pageRequest, predicted_hSequence));
     }
 
 }
