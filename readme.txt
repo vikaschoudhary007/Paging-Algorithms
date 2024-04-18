@@ -9,6 +9,8 @@ The `Combined` class provides methods for generating a random page request seque
     - Creating a modified sequence based on the given input using the `generateH` method.
     - Adding noise to the modified sequence with the `addNoise` method.
     - Simulating a cache with a modified page eviction algorithm using the `blindOracle` method.
+    - Simulating a cache with `LRU`(Least Recently Used) paging technique.
+    - `CombinedAlg` is the implementation of the combined algorithm switching between `blindOracle` and `LRU` to find total number o page faults.
 
  * The class also contains helper methods:
     - `chooseRandomPage`: Helper method for randomly selecting a page from a set.
@@ -48,4 +50,12 @@ pageRequest : [1, 2, 3, 4, 14, 14, 14, 19, 4, 19]
 hSequence : [11, 11, 11, 9, 6, 6, 6, 10, 9, 10]
 predicted_hSequence : [11, 11, 11, 9, 6, 6, 6, 10, 9, 10]
 pageFaults : 6
+
+Example Simulation for Phase 2 :-
+pageRequest : [1, 2, 3, 3, 1, 3, 3, 1, 3, 3, 3, 8, 2, 9, 3, 9, 3, 9, 9, 1]
+hSequence : [5, 13, 4, 4, 5, 4, 4, 5, 4, 4, 4, 21, 13, 16, 4, 16, 4, 16, 16, 5]
+predicted_hSequence : [5, 13, 4, 5, 5, 4, 4, 5, 11, 4, 4, 21, 13, 16, 4, 16, 4, 16, 16, 5]
+# pageFaults for k:3 N:10 n:20 e:0.7 t:0.2 w:2 = 6
+LRU Page Faults : 8
+Total page faults incurred by Combined algorithm: 45
 
