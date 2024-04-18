@@ -575,7 +575,7 @@ public class Combined {
 
     public static void testPlotForK(){
         String name = "k";
-        List<Integer> kValues = new ArrayList<>(List.of(5,10,15,20, 25, 30, 35, 40, 50, 55, 60));
+        List<Integer> kValues = new ArrayList<>(List.of(5,10,15,20));
         int N = 100;
         int n = 10000;
         double epsilon = 0.9;
