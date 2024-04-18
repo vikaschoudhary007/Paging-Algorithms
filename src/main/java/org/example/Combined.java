@@ -1,4 +1,4 @@
-/**
+package org.example; /**
  * The `Combined` class provides methods for generating a random page request sequence, creating a modified sequence,
  * adding noise to the modified sequence, and simulating a cache with a modified page eviction algorithm.
  *
@@ -18,18 +18,22 @@
  * @author Vikas Choudhary
  * @version 1.0
  */
-package org.example;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.LegendItem;
+import org.jfree.chart.LegendItemCollection;
+import org.jfree.chart.plot.Plot;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Arrays;
-import java.util.*;
+import java.awt.geom.Ellipse2D;
 import java.util.List;
+import java.util.*;
 
 public class Combined {
 
@@ -543,45 +547,33 @@ public class Combined {
         return new int[]{optPageFaults, blindPageFaults, lruPageFaults, combinedPageFaults};
     }
 
-    // Function to execute trials of batch size = 100
+    // Function to execute trials of batch size
     // will return a list of results for each trial
-    public static int[] batchTrial(int batchSize, int k, int N, int n, double epsilon, double tau, int w, double threshold){
-
-        int[][] results = new int[batchSize][4];
-        int opt = 0;
-        int blind = 0;
-        int lru = 0;
-        int combined = 0;
-
-        for(int i = 0; i< batchSize; i++) {
-            results[i] = trial(k, N, n, epsilon, tau, w, threshold);
-
+    public static int[] batchTrial(int batchSize, int k, int N, int n, double epsilon, double tau, int w, double threshold) {
+        int[] totalPageFaults = new int[4];
+        for (int i = 0; i < batchSize; i++) {
+            int[] pageFaults = trial(k, N, n, epsilon, tau, w, threshold);
+            for (int j = 0; j < 4; j++) {
+                totalPageFaults[j] += pageFaults[j];
+            }
         }
-
-        for(int i=0; i<results.length; i++){
-            opt += results[i][0];
-            blind += results[i][1];
-            lru += results[i][2];
-            combined += results[i][3];
+        for (int j = 0; j < 4; j++) {
+            totalPageFaults[j] /= batchSize;
         }
-
-        int avg_opt = opt/batchSize;
-        int avg_blind = blind/batchSize;
-        int avg_lru = lru/batchSize;
-        int avg_combined = combined/batchSize;
-
-        return new int[]{avg_opt, avg_blind, avg_lru, avg_combined};
+        return totalPageFaults;
     }
+
 
     public static void testPlotForK(){
         String name = "k";
         List<Integer> kValues = new ArrayList<>(List.of(5,10,15,20));
-        int N = 100;
         int n = 10000;
-        double epsilon = 0.9;
-        double tau = 0.8;
-        int w = 100;
+        double epsilon = 0.7;
+        double tau = 0.9;
+        int w = 200;
         double threshold = 0.1;
+        int factor = 10;
+        int batchSize = 100;
 
         List<Integer> optValues = new ArrayList<>();
         List<Integer> blindValues = new ArrayList<>();
@@ -589,8 +581,8 @@ public class Combined {
         List<Integer> combinedValues = new ArrayList<>();
 
         for(int i=0; i< kValues.size(); i++){
-
-            int[] result = trial(kValues.get(i), N, n, epsilon, tau, w, threshold);
+            int N = factor*(kValues.get(i));
+            int[] result = batchTrial(batchSize, kValues.get(i), N, n, epsilon, tau, w, threshold);
             optValues.add(result[0]);
             blindValues.add(result[1]);
             lruValues.add(result[2]);
@@ -601,15 +593,16 @@ public class Combined {
 
     }
 
-    public static void testPlotForEpsilon(){
+    public static void testPlotForW(){
 
-        String name = "Epsilon";
-        List<Double> epsilonValues = new ArrayList<>(List.of(0.4,0.5,0.6,0.7));
-        int k=10;
-        int N = 100;
+        String name = "w";
+        List<Integer> wValues = new ArrayList<>(List.of(50,100,200,500, 1000));
+        int k = 10;
         int n = 10000;
-        double tau = 0.3;
-        int w = 1000;
+        int batchSize = 100;
+        int N = 100;
+        double epsilon = 0.7;
+        double tau = 0.9;
         double threshold = 0.1;
 
         List<Integer> optValues = new ArrayList<>();
@@ -617,10 +610,38 @@ public class Combined {
         List<Integer> lruValues = new ArrayList<>();
         List<Integer> combinedValues = new ArrayList<>();
 
+        for(int i=0; i< wValues.size(); i++){
+            int[] result = batchTrial(batchSize, k, N, n, epsilon, tau, wValues.get(i), threshold);
+            optValues.add(result[0]);
+            blindValues.add(result[1]);
+            lruValues.add(result[2]);
+            combinedValues.add(result[3]);
+        }
+
+        plotPageFaultsVsK(optValues, blindValues, lruValues, combinedValues, wValues, name);
+
+    }
+
+
+    public static void testPlotForEpsilon(){
+
+        String name = "ε";
+        List<Double> epsilonValues = new ArrayList<>(List.of(0.2, 0.3, 0.4, 0.6, 0.7));
+        int k = 10;
+        int N = 100;
+        int n = 10000;
+        int w = 200;
+        int batchSize = 100;
+        double tau = 0.9;
+        double threshold = 0.1;
+
+        List<Integer> optValues = new ArrayList<>();
+        List<Integer> blindValues = new ArrayList<>();
+        List<Integer> lruValues = new ArrayList<>();
+        List<Integer> combinedValues = new ArrayList<>();
 
         for(int i=0; i< epsilonValues.size(); i++){
-
-            int[] result = trial(k, N, n, epsilonValues.get(i), tau, w, threshold);
+            int[] result = batchTrial(batchSize, k, N, n, epsilonValues.get(i), tau, w, threshold);
             optValues.add(result[0]);
             blindValues.add(result[1]);
             lruValues.add(result[2]);
@@ -628,6 +649,36 @@ public class Combined {
         }
 
         plotPageFaultsVsEpsilon(optValues, blindValues, lruValues, combinedValues, epsilonValues, name);
+
+    }
+
+
+    public static void testPlotForTau(){
+
+        String name = "τ";
+        List<Double> tauValues = new ArrayList<>(List.of(0.45, 0.55, 0.7, 0.8, 0.9));
+        int k = 10;
+        int N = 100;
+        int n = 10000;
+        int w = 200;
+        int batchSize = 100;
+        double epsilon = 0.7;
+        double threshold = 0.1;
+
+        List<Integer> optValues = new ArrayList<>();
+        List<Integer> blindValues = new ArrayList<>();
+        List<Integer> lruValues = new ArrayList<>();
+        List<Integer> combinedValues = new ArrayList<>();
+
+        for(int i=0; i< tauValues.size(); i++){
+            int[] result = batchTrial(batchSize, k, N, n, epsilon, tauValues.get(i), w, threshold);
+            optValues.add(result[0]);
+            blindValues.add(result[1]);
+            lruValues.add(result[2]);
+            combinedValues.add(result[3]);
+        }
+
+        plotPageFaultsVsEpsilon(optValues, blindValues, lruValues, combinedValues, tauValues, name);
 
     }
 
@@ -658,7 +709,7 @@ public class Combined {
 
         // Create the chart
         JFreeChart chart = ChartFactory.createXYLineChart(
-                "Page Faults vs. "+name, // chart title
+                "Page Faults vs. " + name, // chart title
                 name, // x axis label
                 "Page Faults", // y axis label
                 dataset
@@ -666,9 +717,24 @@ public class Combined {
 
         // Customize chart
         chart.setBackgroundPaint(Color.white);
+        XYPlot plot = chart.getXYPlot();
+
+        // Customize line colors
+        plot.getRenderer().setSeriesPaint(0, Color.BLUE);  // OPT
+        plot.getRenderer().setSeriesPaint(1, Color.RED);   // Blind Oracle
+        plot.getRenderer().setSeriesPaint(2, Color.GREEN); // LRU
+        plot.getRenderer().setSeriesPaint(3, Color.ORANGE);// Combined
+
+        // Customize legend
+        LegendItemCollection legendItems = new LegendItemCollection();
+        legendItems.add(new LegendItem("OPT", null, null, null, Plot.DEFAULT_LEGEND_ITEM_BOX, Color.BLUE));
+        legendItems.add(new LegendItem("Blind Oracle", null, null, null, Plot.DEFAULT_LEGEND_ITEM_BOX, Color.RED));
+        legendItems.add(new LegendItem("LRU", null, null, null, Plot.DEFAULT_LEGEND_ITEM_BOX, Color.GREEN));
+        legendItems.add(new LegendItem("Combined", null, null, null, Plot.DEFAULT_LEGEND_ITEM_BOX, Color.ORANGE));
+        plot.setFixedLegendItems(legendItems);
 
         // Create and set up the frame
-        JFrame frame = new JFrame("Page Faults vs. "+name);
+        JFrame frame = new JFrame("Page Faults vs. " + name + " - Regime 2");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Create chart panel and add it to frame
@@ -707,7 +773,7 @@ public class Combined {
 
         // Create the chart
         JFreeChart chart = ChartFactory.createXYLineChart(
-                "Page Faults vs. "+name, // chart title
+                "Page Faults vs. " + name, // chart title
                 name, // x axis label
                 "Page Faults", // y axis label
                 dataset
@@ -715,9 +781,24 @@ public class Combined {
 
         // Customize chart
         chart.setBackgroundPaint(Color.white);
+        XYPlot plot = chart.getXYPlot();
+
+        // Customize line colors
+        plot.getRenderer().setSeriesPaint(0, Color.BLUE);  // OPT
+        plot.getRenderer().setSeriesPaint(1, Color.RED);   // Blind Oracle
+        plot.getRenderer().setSeriesPaint(2, Color.GREEN); // LRU
+        plot.getRenderer().setSeriesPaint(3, Color.ORANGE);// Combined
+
+        // Customize legend
+        LegendItemCollection legendItems = new LegendItemCollection();
+        legendItems.add(new LegendItem("OPT", null, null, null, Plot.DEFAULT_LEGEND_ITEM_BOX, Color.BLUE));
+        legendItems.add(new LegendItem("Blind Oracle", null, null, null, Plot.DEFAULT_LEGEND_ITEM_BOX, Color.RED));
+        legendItems.add(new LegendItem("LRU", null, null, null, Plot.DEFAULT_LEGEND_ITEM_BOX, Color.GREEN));
+        legendItems.add(new LegendItem("Combined", null, null, null, Plot.DEFAULT_LEGEND_ITEM_BOX, Color.ORANGE));
+        plot.setFixedLegendItems(legendItems);
 
         // Create and set up the frame
-        JFrame frame = new JFrame("Page Faults vs. "+name);
+        JFrame frame = new JFrame("Page Faults vs. " + name);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Create chart panel and add it to frame
@@ -731,12 +812,19 @@ public class Combined {
     }
 
 
+
+
     /**
      * Main method demonstrating the usage of the functionalities with example parameters.
      *
      * @param args Command-line arguments.
      */
     public static void main(String[] args) {
+
+        testPlotForK();
+        testPlotForW();
+        testPlotForEpsilon();
+        testPlotForTau();
 
 //        testGenerateRandomSequence();
 //        testGenerateH();
@@ -749,53 +837,43 @@ public class Combined {
 
 
 
-        int k = 50;
-        int N = 100;
-        int n = 10000;
-        double epsilon = 0.6;
-        double tau = 0.7;
-        int w = 200;
-        double threshold = 0.1;
-        int batchSize = 100;
-
-
-
-//        int [] results = batchTrial(batchSize, k, N, n, epsilon, tau, w, threshold);
+//        int k = 10;
+//        int N = 20;
+//        int n = 10000;
+//        double epsilon = 0.7;
+//        double tau = 0.9;
+//        int w = 200;
+//        double threshold = 0.1;
+//        int batchSize = 100;
 //
-//        System.out.println(Arrays.toString(results));
+//
+//        List<Integer> sequence = generateRandomSequence(k, N, n, epsilon);
+//        System.out.println("Random Sequence");
+//        System.out.println(sequence);
+//
+//        List<Integer> hSequence = generateH(sequence);
+//        System.out.println("H Sequence");
+//        System.out.println(hSequence);
+//
+//        List<Integer> noisyHSequence = addNoise(hSequence, tau, w);
+//        System.out.println("Noisy hSequence");
+//        System.out.println(noisyHSequence);
+//
+//        System.out.println("\nk: " + k + " N:" + N + " n:" + n + " epsilon:" + epsilon + " tau:" + tau + " w:" + w + " threshold:"+ threshold);
+//
+//        int pageFaultsOpt = blindOracle(k, sequence, hSequence);
+//        System.out.println("\nOPT Page Faults : " + pageFaultsOpt);
+//
+//
+//        int pageFaultsBlind = blindOracle(k, sequence, noisyHSequence);
+//        System.out.println("\nBlindOracle Page Faults : " + pageFaultsBlind);
+//
+//        int lruPageFaults = LRU(k, sequence);
+//        System.out.println("\nLRU Page Faults : "+ lruPageFaults);
+//
+//        int totalFaults = combinedAlg(k, sequence, noisyHSequence, threshold);
+//        System.out.println("\nTotal page faults incurred by Combined algorithm: " + totalFaults);
 
-
-
-        List<Integer> sequence = generateRandomSequence(k, N, n, epsilon);
-        System.out.println("Random Sequence");
-        System.out.println(sequence);
-
-        List<Integer> hSequence = generateH(sequence);
-        System.out.println("H Sequence");
-        System.out.println(hSequence);
-
-        List<Integer> noisyHSequence = addNoise(hSequence, tau, w);
-        System.out.println("Noisy hSequence");
-        System.out.println(noisyHSequence);
-
-        System.out.println("\nk: " + k + " N:" + N + " n:" + n + " epsilon:" + epsilon + " tau:" + tau + " w:" + w + " threshold:"+ threshold);
-
-        int pageFaultsOpt = blindOracle(k, sequence, hSequence);
-        System.out.println("\nOPT Page Faults : " + pageFaultsOpt);
-
-
-        int pageFaultsBlind = blindOracle(k, sequence, noisyHSequence);
-        System.out.println("\nBlindOracle Page Faults : " + pageFaultsBlind);
-
-        int lruPageFaults = LRU(k, sequence);
-        System.out.println("\nLRU Page Faults : "+ lruPageFaults);
-
-        int totalFaults = combinedAlg(k, sequence, noisyHSequence, threshold);
-        System.out.println("\nTotal page faults incurred by Combined algorithm: " + totalFaults);
-
-
-        testPlotForK();
-        testPlotForEpsilon();
     }
 
 
