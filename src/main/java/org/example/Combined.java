@@ -25,13 +25,13 @@ import org.jfree.chart.LegendItem;
 import org.jfree.chart.LegendItemCollection;
 import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.Path2D;
 import java.util.List;
 import java.util.*;
 
@@ -534,6 +534,18 @@ public class Combined {
     // function to execute one single trial with given values of  (k, N, n, ɛ, τ, w)
     // will return a list of pageFaults for OPT, BlindOracle, LRU, Combined
 
+    /**
+     * Executes a single trial with given values of (k, N, n, ε, τ, w).
+     *
+     * @param k          The cache size.
+     * @param N          The factor for generating the working set size.
+     * @param n          The size of the reference string.
+     * @param epsilon    The threshold for the Blind Oracle algorithm.
+     * @param tau        The threshold for adding noise to the sequence.
+     * @param w          The working set window size.
+     * @param threshold  The threshold for the Combined algorithm.
+     * @return An array containing the page faults for OPT, Blind Oracle, LRU, and Combined algorithms.
+     */
     public static int[] trial(int k, int N, int n, double epsilon, double tau, int w, double threshold){
 
         List<Integer> sequence = generateRandomSequence(k, N, n, epsilon);
@@ -549,6 +561,20 @@ public class Combined {
 
     // Function to execute trials of batch size
     // will return a list of results for each trial
+
+    /**
+     * Function to execute trials of a given batch size and return a list of results for each trial.
+     *
+     * @param batchSize  The number of trials to execute.
+     * @param k          The cache size.
+     * @param N          The factor for generating the working set size.
+     * @param n          The size of the reference string.
+     * @param epsilon    The threshold for the Blind Oracle algorithm.
+     * @param tau        The threshold for the Combined algorithm.
+     * @param w          The working set window size.
+     * @param threshold  The threshold for the Combined algorithm.
+     * @return An array containing the total page faults for each algorithm over all trials.
+     */
     public static int[] batchTrial(int batchSize, int k, int N, int n, double epsilon, double tau, int w, double threshold) {
         int[] totalPageFaults = new int[4];
         for (int i = 0; i < batchSize; i++) {
@@ -563,7 +589,9 @@ public class Combined {
         return totalPageFaults;
     }
 
-
+    /**
+     * Method to test and plot page faults vs. cache size (k) for various caching algorithms.
+     */
     public static void testPlotForK(){
         String name = "k";
         List<Integer> kValues = new ArrayList<>(List.of(5,10,15,20));
@@ -593,6 +621,9 @@ public class Combined {
 
     }
 
+    /**
+     * Method to test and plot page faults vs. working set size (w) for various caching algorithms.
+     */
     public static void testPlotForW(){
 
         String name = "w";
@@ -622,7 +653,9 @@ public class Combined {
 
     }
 
-
+    /**
+     * Method to test and plot page faults vs. epsilon for various caching algorithms.
+     */
     public static void testPlotForEpsilon(){
 
         String name = "ε";
@@ -640,6 +673,8 @@ public class Combined {
         List<Integer> lruValues = new ArrayList<>();
         List<Integer> combinedValues = new ArrayList<>();
 
+
+
         for(int i=0; i< epsilonValues.size(); i++){
             int[] result = batchTrial(batchSize, k, N, n, epsilonValues.get(i), tau, w, threshold);
             optValues.add(result[0]);
@@ -648,11 +683,15 @@ public class Combined {
             combinedValues.add(result[3]);
         }
 
+
         plotPageFaultsVsEpsilon(optValues, blindValues, lruValues, combinedValues, epsilonValues, name);
 
     }
 
 
+    /**
+     * Method to test and plot page faults vs. tau for various caching algorithms.
+     */
     public static void testPlotForTau(){
 
         String name = "τ";
@@ -662,7 +701,7 @@ public class Combined {
         int n = 10000;
         int w = 200;
         int batchSize = 100;
-        double epsilon = 0.7;
+        double epsilon = 0.45;
         double threshold = 0.1;
 
         List<Integer> optValues = new ArrayList<>();
@@ -683,7 +722,18 @@ public class Combined {
     }
 
 
-
+    /**
+     * Generates plots for page faults vs. the cache size (k).
+     * This method tests the page fault performance of various caching algorithms
+     * (OPT, Blind Oracle, LRU, Combined) against different cache sizes (k).
+     *
+     * @param optPageFaults    List of page faults for the OPT algorithm.
+     * @param blindPageFaults  List of page faults for the Blind Oracle algorithm.
+     * @param lruPageFaults    List of page faults for the LRU algorithm.
+     * @param combinedPageFaults  List of page faults for the Combined algorithm.
+     * @param kValues          List of cache sizes (k).
+     * @param name             The name of the parameter being varied (k in this case).
+     */
     public static void plotPageFaultsVsK(List<Integer> optPageFaults, List<Integer> blindPageFaults, List<Integer> lruPageFaults, List<Integer> combinedPageFaults, List<Integer> kValues, String name) {
         // Create a dataset
         XYSeriesCollection dataset = new XYSeriesCollection();
@@ -716,14 +766,30 @@ public class Combined {
         );
 
         // Customize chart
-        chart.setBackgroundPaint(Color.white);
+        chart.setBackgroundPaint(Color.WHITE);
         XYPlot plot = chart.getXYPlot();
+        plot.setBackgroundPaint(Color.WHITE);
 
-        // Customize line colors
-        plot.getRenderer().setSeriesPaint(0, Color.BLUE);  // OPT
-        plot.getRenderer().setSeriesPaint(1, Color.RED);   // Blind Oracle
-        plot.getRenderer().setSeriesPaint(2, Color.GREEN); // LRU
-        plot.getRenderer().setSeriesPaint(3, Color.ORANGE);// Combined
+        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
+
+
+        renderer.setSeriesPaint(0, Color.BLUE);  // OPT
+        renderer.setSeriesPaint(1, Color.RED);   // Blind Oracle
+        renderer.setSeriesPaint(2, Color.GREEN); // LRU
+        renderer.setSeriesPaint(3, Color.ORANGE);// Combined
+        renderer.setSeriesStroke(0, new BasicStroke(2.0f)); // OPT line thickness
+        renderer.setSeriesStroke(1, new BasicStroke(2.0f)); // Blind Oracle line thickness
+        renderer.setSeriesStroke(2, new BasicStroke(2.0f)); // LRU line thickness
+        renderer.setSeriesStroke(3, new BasicStroke(2.0f)); // Combined line thickness
+
+        // Show points on the lines
+        renderer.setSeriesShapesVisible(0, true); // OPT
+        renderer.setSeriesShapesVisible(1, true); // Blind Oracle
+        renderer.setSeriesShapesVisible(2, true); // LRU
+        renderer.setSeriesShapesVisible(3, true); // Combined
+
+        plot.setRenderer(renderer);
+
 
         // Customize legend
         LegendItemCollection legendItems = new LegendItemCollection();
@@ -747,6 +813,18 @@ public class Combined {
         frame.setVisible(true);
     }
 
+    /**
+     * Generates plots for page faults vs. the cache size (epsilon).
+     * This method tests the page fault performance of various caching algorithms
+     * (OPT, Blind Oracle, LRU, Combined) against different cache sizes (epsilon).
+     *
+     * @param optPageFaults    List of page faults for the OPT algorithm.
+     * @param blindPageFaults  List of page faults for the Blind Oracle algorithm.
+     * @param lruPageFaults    List of page faults for the LRU algorithm.
+     * @param combinedPageFaults  List of page faults for the Combined algorithm.
+     * @param eValues          List of locality parameter values (epsilon).
+     * @param name             The name of the parameter being varied (epsilon in this case).
+     */
 
     public static void plotPageFaultsVsEpsilon(List<Integer> optPageFaults, List<Integer> blindPageFaults, List<Integer> lruPageFaults, List<Integer> combinedPageFaults, List<Double> eValues, String name) {
         // Create a dataset
@@ -780,14 +858,30 @@ public class Combined {
         );
 
         // Customize chart
-        chart.setBackgroundPaint(Color.white);
+        chart.setBackgroundPaint(Color.WHITE);
         XYPlot plot = chart.getXYPlot();
+        plot.setBackgroundPaint(Color.WHITE);
 
-        // Customize line colors
-        plot.getRenderer().setSeriesPaint(0, Color.BLUE);  // OPT
-        plot.getRenderer().setSeriesPaint(1, Color.RED);   // Blind Oracle
-        plot.getRenderer().setSeriesPaint(2, Color.GREEN); // LRU
-        plot.getRenderer().setSeriesPaint(3, Color.ORANGE);// Combined
+        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
+
+
+        renderer.setSeriesPaint(0, Color.BLUE);  // OPT
+        renderer.setSeriesPaint(1, Color.RED);   // Blind Oracle
+        renderer.setSeriesPaint(2, Color.GREEN); // LRU
+        renderer.setSeriesPaint(3, Color.ORANGE);// Combined
+        renderer.setSeriesStroke(0, new BasicStroke(2.0f)); // OPT line thickness
+        renderer.setSeriesStroke(1, new BasicStroke(2.0f)); // Blind Oracle line thickness
+        renderer.setSeriesStroke(2, new BasicStroke(2.0f)); // LRU line thickness
+        renderer.setSeriesStroke(3, new BasicStroke(2.0f)); // Combined line thickness
+
+        // Show points on the lines
+        renderer.setSeriesShapesVisible(0, true); // OPT
+        renderer.setSeriesShapesVisible(1, true); // Blind Oracle
+        renderer.setSeriesShapesVisible(2, true); // LRU
+        renderer.setSeriesShapesVisible(3, true); // Combined
+
+        plot.setRenderer(renderer);
+
 
         // Customize legend
         LegendItemCollection legendItems = new LegendItemCollection();
@@ -821,61 +915,21 @@ public class Combined {
      */
     public static void main(String[] args) {
 
+        testGenerateRandomSequence();
+        testGenerateH();
+        testAddNoise();
+        testBlindOracle1();
+        testBlindOracle2();
+        testLRU();
+        testCombinedAlg();
+        testPhase2();
+
         testPlotForK();
         testPlotForW();
         testPlotForEpsilon();
         testPlotForTau();
 
-//        testGenerateRandomSequence();
-//        testGenerateH();
-//        testAddNoise();
-//        testBlindOracle1();
-//        testBlindOracle2();
-//        testLRU();
-//        testCombinedAlg();
-//        testPhase2();
-
-
-
-//        int k = 10;
-//        int N = 20;
-//        int n = 10000;
-//        double epsilon = 0.7;
-//        double tau = 0.9;
-//        int w = 200;
-//        double threshold = 0.1;
-//        int batchSize = 100;
-//
-//
-//        List<Integer> sequence = generateRandomSequence(k, N, n, epsilon);
-//        System.out.println("Random Sequence");
-//        System.out.println(sequence);
-//
-//        List<Integer> hSequence = generateH(sequence);
-//        System.out.println("H Sequence");
-//        System.out.println(hSequence);
-//
-//        List<Integer> noisyHSequence = addNoise(hSequence, tau, w);
-//        System.out.println("Noisy hSequence");
-//        System.out.println(noisyHSequence);
-//
-//        System.out.println("\nk: " + k + " N:" + N + " n:" + n + " epsilon:" + epsilon + " tau:" + tau + " w:" + w + " threshold:"+ threshold);
-//
-//        int pageFaultsOpt = blindOracle(k, sequence, hSequence);
-//        System.out.println("\nOPT Page Faults : " + pageFaultsOpt);
-//
-//
-//        int pageFaultsBlind = blindOracle(k, sequence, noisyHSequence);
-//        System.out.println("\nBlindOracle Page Faults : " + pageFaultsBlind);
-//
-//        int lruPageFaults = LRU(k, sequence);
-//        System.out.println("\nLRU Page Faults : "+ lruPageFaults);
-//
-//        int totalFaults = combinedAlg(k, sequence, noisyHSequence, threshold);
-//        System.out.println("\nTotal page faults incurred by Combined algorithm: " + totalFaults);
 
     }
-
-
 }
 

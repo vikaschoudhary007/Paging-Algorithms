@@ -15,10 +15,19 @@ The `Combined` class provides methods for generating a random page request seque
  * The class also contains helper methods:
     - `chooseRandomPage`: Helper method for randomly selecting a page from a set.
     - `findPageToRemove`: Helper method for finding a page to evict in case of a cache miss.
+    - `trial`: Helper method to run all 4 algorithms with a set of parameters (k, N, ε, τ, w).
+    - `batchTrial`: Helper method to run a batch of trial.
+    - `plotPageFaultsVsK & plotPageFaultsVsEpsilon`: Helper functions to generate plots.
+
 
  * The main method demonstrates the usage of these functionalities with example parameters and prints the generated
  * sequences along with the number of page faults in the blind replacement simulation.
 
+### Eternal Libraries:
+Need `jfree` external library to create plot in java.
+[Download jfree library](https://www.jfree.org/jfreechart/download.html)
+
+Add jfree.jar file as a module in intelliJ for using external library. 
 
 ### Compilation Command:
 
