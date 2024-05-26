@@ -3,6 +3,7 @@ import random
 
 # importing package
 import matplotlib.pyplot as plt
+from multiprocessing import Process
 
 
 # Generate Random Sequence
@@ -262,194 +263,6 @@ def combinedAlg(k, seq, hseq, thr) -> int:
     # print("cal LRU " + str(pageFaultsLRU))
     # print("cal Combined" + str(pageFaultsCombined))
     return pageFaultsCombined
-
-
-# def test1():
-#     """Test case for generateRandomSequence function."""
-#     input = {
-#         "k": 4,
-#         "N": 5,
-#         "n": 5,
-#         "e": 1
-#     }
-#     seq = generateRandomSequence(input["k"], input["N"], input["n"], input["e"])
-#     assert len(seq) == input["n"], "Generated sequence length does not match"
-
-#     # Ensure the first k elements are from 1 to k
-#     for i in range(input["k"]):
-#         assert seq[i] == i + 1, "First k elements are not from 1 to k"
-
-
-def test2():
-    """Test case for generateH function."""
-    seq = [1, 2, 3, 4, 5, 1, 2, 3, 4, 1]
-    h_seq = generateH(seq)
-    # print(h_seq)
-
-    assert len(h_seq) == len(seq), "Generated h_seq length does not match"
-
-    # Ensure hi values are correct
-    expected_h_seq = [6, 7, 8, 9, 11, 10, 11, 11, 11, 11]
-    assert h_seq == expected_h_seq, "Generated h_seq values are incorrect"
-
-
-def test3():
-    """Test case for addNoise function."""
-    h_seq = [1, 2, 3, 4, 5]
-    tau = 0.3
-    w = 2
-
-    h_hat_seq = addNoise(h_seq, tau, w)
-
-    assert len(h_hat_seq) == len(h_seq), "Generated h_hat_seq length does not match"
-
-    # Ensure hi values are within the expected range
-    for i in range(len(h_seq)):
-        assert max(i + 1, h_seq[i] - w // 2) <= h_hat_seq[i] <= max(i + 1, h_seq[
-            i] - w // 2) + w, "Generated h_hat_seq values are out of range"
-
-
-def test4():
-    """Test case for blindOracle function."""
-    k = 3
-    seq = [1, 2, 3, 4, 1, 2, 5, 1, 2, 3]
-    h_seq = generateH(seq)
-    pageFaults = 6
-    calPageFaults = blindOracle(k, seq, h_seq)
-    assert pageFaults == calPageFaults, "BlindOracle page faults count is incorrect"
-
-
-def test5():
-    """Test case for overall functionality."""
-    k = 5
-    N = 20  # N >> k
-    n = 100
-    e = 0.5
-    t = 0.2
-    w = 7
-
-    seq = generateRandomSequence(k, N, n, e)
-    # print(seq)
-
-    hseq = generateH(seq)
-    # print(hseq)
-
-    nseq = addNoise(hseq, t, w)
-    # print(nseq)
-
-    pageFaults = blindOracle(k, seq, nseq)
-    print(
-        "Blind Oracle pageFaults for k:" + str(k) + " N:" + str(N) + " n:" + str(n) + " e:" + str(e) + " t:" + str(
-            t) + " w:" + str(
-            w) + " = " + str(pageFaults))
-
-
-def test6():
-    """Test case for overall functionality."""
-    k = 5
-    N = 6  # N >> k
-    n = 100
-    e = 0.5
-    t = 0.2
-    w = 7
-
-    seq = generateRandomSequence(k, N, n, e)
-    # print(seq)
-
-    hseq = generateH(seq)
-    # print(hseq)
-
-    nseq = addNoise(hseq, t, w)
-    # print(nseq)
-
-    pageFaults = blindOracle(k, seq, nseq)
-    print(
-        "Blind Oracle pageFaults for k:" + str(k) + " N:" + str(N) + " n:" + str(n) + " e:" + str(e) + " t:" + str(
-            t) + " w:" + str(
-            w) + " = " + str(pageFaults))
-
-
-def test7():
-    """Test case for LRU function."""
-    k = 4
-    seq = [1, 2, 3, 4, 2, 1, 5, 6, 2, 1, 2, 3, 7, 6, 3, 2, 1, 2, 3, 6]
-    pageFaults = 10
-    calPageFaults = LRU(k, seq)
-    # print(calPageFaults)
-    assert pageFaults == calPageFaults, "LRU page faults count is incorrect"
-
-
-def test8():
-    """Test case for LRU function."""
-    k = 3
-    seq = [1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4]
-    pageFaults = 12
-    calPageFaults = LRU(k, seq)
-    # print(calPageFaults)
-    assert pageFaults == calPageFaults, "LRU page faults count is incorrect"
-
-
-def test9():
-    """Test case for Combined function."""
-    k = 3
-    seq = [1, 2, 3, 4, 1, 2, 5, 1, 2, 3]
-    h_seq = generateH(seq)
-    pageFaults = 10
-
-    calPageFaults = combinedAlg(k, seq, h_seq, 0)
-
-    assert pageFaults == calPageFaults, "Combined PageFaults are wrong"
-
-
-def test10():
-    """Test case for Overall LRU function."""
-    k = 5
-    N = 6  # N >> k
-    n = 100
-    e = 0.5
-    t = 0.2
-    w = 7
-
-    seq = generateRandomSequence(k, N, n, e)
-    # print(seq)
-
-    hseq = generateH(seq)
-    # print(hseq)
-
-    nseq = addNoise(hseq, t, w)
-    # print(nseq)
-
-    pageFaults = LRU(k, seq)
-    print(
-        "LRU pageFaults for k:" + str(k) + " N:" + str(N) + " n:" + str(n) + " e:" + str(e) + " t:" + str(
-            t) + " w:" + str(
-            w) + " = " + str(pageFaults))
-
-
-def test11():
-    """Test case for Overall Combined function."""
-    k = 5
-    N = 6  # N >> k
-    n = 100
-    e = 0.5
-    t = 0.2
-    w = 7
-    thr = 0
-
-    seq = generateRandomSequence(k, N, n, e)
-    # print(seq)
-
-    hseq = generateH(seq)
-    # print(hseq)
-
-    nseq = addNoise(hseq, t, w)
-    # print(nseq)
-
-    pageFaults = combinedAlg(k, seq, nseq, 0)
-    print(
-        "Combined pageFaults for k:" + str(k) + " N:" + str(N) + " n:" + str(n) + " e:" + str(e) + " t:" + str(
-            t) + " w:" + str(
-            w) + " = " + str(pageFaults))
 
 
 
@@ -944,28 +757,44 @@ def test20():
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    # test1()
-    # test2()
-    # test3()
-    # test4()
-    # test5()
-    # test6()
-    # test7()
-    # test8()
-    # test9()
-    # test10()
-    # test11()
 
-    # Trend 1
-    test13()
-    test14()
-    # Trend 2
-    test15()
-    test16()
-    # Trend 3
-    test17()
-    test18()
-    # Trend 4
-    test19()
-    test20()
-    print("All test case passed")
+    processes = []
+
+    try:
+        # Trend 1
+        # running on diffrent processes to save time
+        processes.append(Process(target=test13, args=()))
+        processes.append(Process(target=test14, args=()))
+
+
+        # Trend 2
+        # running on diffrent processes to save time
+        processes.append(Process(target=test15, args=()))
+        processes.append(Process(target=test16, args=()))
+
+
+        # Trend 3
+        # running on diffrent processes to save time
+        processes.append(Process(target=test17, args=()))
+        processes.append(Process(target=test18, args=()))
+
+        # Trend 4
+        # running on diffrent processes to save time
+        processes.append(Process(target=test19, args=()))
+        processes.append(Process(target=test20, args=()))
+
+        for p in processes:
+            p.start()
+        
+        for p in processes:
+            p.join()
+
+
+    except KeyboardInterrupt:
+        print("KeyboardInterrupt detected! Terminating all processes...")
+        for p in processes:
+            p.terminate()
+            p.join()
+        print("All processes terminated.")
+
+    # print("All test case passed")
