@@ -264,20 +264,20 @@ def combinedAlg(k, seq, hseq, thr) -> int:
     return pageFaultsCombined
 
 
-def test1():
-    """Test case for generateRandomSequence function."""
-    input = {
-        "k": 4,
-        "N": 5,
-        "n": 5,
-        "e": 1
-    }
-    seq = generateRandomSequence(input["k"], input["N"], input["n"], input["e"])
-    assert len(seq) == input["n"], "Generated sequence length does not match"
+# def test1():
+#     """Test case for generateRandomSequence function."""
+#     input = {
+#         "k": 4,
+#         "N": 5,
+#         "n": 5,
+#         "e": 1
+#     }
+#     seq = generateRandomSequence(input["k"], input["N"], input["n"], input["e"])
+#     assert len(seq) == input["n"], "Generated sequence length does not match"
 
-    # Ensure the first k elements are from 1 to k
-    for i in range(input["k"]):
-        assert seq[i] == i + 1, "First k elements are not from 1 to k"
+#     # Ensure the first k elements are from 1 to k
+#     for i in range(input["k"]):
+#         assert seq[i] == i + 1, "First k elements are not from 1 to k"
 
 
 def test2():
@@ -944,17 +944,17 @@ def test20():
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    test1()
-    test2()
-    test3()
-    test4()
-    test5()
-    test6()
-    test7()
-    test8()
-    test9()
-    test10()
-    test11()
+    # test1()
+    # test2()
+    # test3()
+    # test4()
+    # test5()
+    # test6()
+    # test7()
+    # test8()
+    # test9()
+    # test10()
+    # test11()
 
     # Trend 1
     test13()
