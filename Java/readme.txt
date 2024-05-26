@@ -25,11 +25,8 @@ The `Combined` class provides methods for generating a random page request seque
 ## Code Documentation
 For code documentation launch the Combined.html file in /javadoc/org folder
 
-### Eternal Libraries:
-Need `jfree` external library to create plot in java.
-[Download jfree library](https://www.jfree.org/jfreechart/download.html)
 
-Add jfree.jar file as a module in intelliJ for using external library.
+
 
 ### Compiler Version:
 
