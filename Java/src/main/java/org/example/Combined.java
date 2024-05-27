@@ -1077,23 +1077,12 @@ public class Combined {
     }
 
 
-
-
     /**
      * Main method demonstrating the usage of the functionalities with example parameters.
      *
      * @param args Command-line arguments.
      */
     public static void main(String[] args) {
-
-//        testGenerateRandomSequence();
-//        testGenerateH();
-//        testAddNoise();
-//        testBlindOracle1();
-//        testBlindOracle2();
-//        testLRU();
-//        testCombinedAlg();
-//        testPhase2();
 
         int numOfThreads = 8;
         ExecutorService executorService = Executors.newFixedThreadPool(numOfThreads);
