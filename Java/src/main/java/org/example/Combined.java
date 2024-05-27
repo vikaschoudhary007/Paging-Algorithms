@@ -24,6 +24,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.LegendItem;
 import org.jfree.chart.LegendItemCollection;
 import org.jfree.chart.plot.Plot;
+import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -760,7 +761,11 @@ public class Combined {
                 "Page Faults vs. " + name, // chart title
                 name, // x axis label
                 "Page Faults", // y axis label
-                dataset
+                dataset,
+                PlotOrientation.VERTICAL,
+                true,
+                true,
+                false
         );
 
         // Customize chart
@@ -852,7 +857,11 @@ public class Combined {
                 "Page Faults vs. " + name, // chart title
                 name, // x axis label
                 "Page Faults", // y axis label
-                dataset
+                dataset,
+                PlotOrientation.VERTICAL,
+                true,
+                true,
+                false
         );
 
         // Customize chart
