@@ -33,6 +33,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class Combined {
 
@@ -243,90 +247,6 @@ public class Combined {
         return pageToRemove;
     }
 
-    /** Test Functions **/
-
-    // Test function for generateRandomSequence
-    public static void testGenerateRandomSequence() {
-        // Test input parameters
-        int k = 3;
-        int N = 10;
-        int n = 7;
-        double e = 0.6;
-
-        List<Integer> seq = generateRandomSequence(k, N, n, e);
-        assert seq.size() == n : "Generated random sequence length does not match";
-
-        // Ensure the first k elements are from 1 to k
-        for (int i = 0; i < k; i++) {
-            assert seq.get(i) == i + 1 : "First k elements are not from 1 to k";
-        }
-    }
-
-    // Test case for generateH function
-    public static void testGenerateH() {
-        List<Integer> seq = List.of(1, 2, 3, 4, 14, 14, 14, 19, 4, 19);
-        List<Integer> hSeq = generateH(seq);
-
-        assert hSeq.size() == seq.size() : "Generated hSeq length does not match";
-
-        // Ensure hi values are correct
-        List<Integer> expectedHSeq = List.of(11, 11, 11, 9, 6, 6, 6, 10, 9, 10);
-        assert hSeq.equals(expectedHSeq) : "Generated hSeq values are incorrect";
-    }
-
-    // Test case for addNoise function
-    public static void testAddNoise() {
-        List<Integer> hSeq = List.of(11, 11, 11, 9, 6, 6, 6, 10, 9, 10);
-        double tau = 0.6;
-        int w = 2;
-
-        List<Integer> predictedHSeq = addNoise(hSeq, tau, w);
-
-        assert predictedHSeq.size() == hSeq.size() : "Generated predictedHSeq length does not match";
-
-        // Ensure hi values are within the expected range
-        for (int i = 0; i < hSeq.size(); i++) {
-            int lowerBound = Math.max(i + 1, hSeq.get(i) - w / 2);
-            int upperBound = lowerBound + w;
-            assert lowerBound <= predictedHSeq.get(i) && predictedHSeq.get(i) <= upperBound :
-                    "Generated predictedHSeq values are out of range";
-        }
-    }
-
-    // Test function for blindOracle Algorithm
-    public static void testBlindOracle1() {
-        // Testing for the following input parameters
-        int k = 4;
-        int N = 20;  // N >> k
-        int n = 10;
-        double e = 0.7;
-        double t = 0.2;
-        int w = 2;
-
-        List<Integer> seq = generateRandomSequence(k, N, n, e);
-        List<Integer> hSeq = generateH(seq);
-        List<Integer> noisyHSeq = addNoise(hSeq, t, w);
-
-        int pageFaults = blindOracle(k, seq, noisyHSeq);
-        System.out.println("# pageFaults for k:" + k + " N:" + N + " n:" + n + " e:" + e + " t:" + t + " w:" + w + " = " + pageFaults);
-    }
-
-    public static void testBlindOracle2() {
-        // Testing for the following input parameters
-        int k = 6;
-        int N = 20;  // N >> k
-        int n = 30;
-        double e = 0.9;
-        double t = 0.5;
-        int w = 4;
-
-        List<Integer> seq = generateRandomSequence(k, N, n, e);
-        List<Integer> hSeq = generateH(seq);
-        List<Integer> noisyHSeq = addNoise(hSeq, t, w);
-
-        int pageFaults = blindOracle(k, seq, noisyHSeq);
-        System.out.println("# pageFaults for k:" + k + " N:" + N + " n:" + n + " e:" + e + " t:" + t + " w:" + w + " = " + pageFaults);
-    }
 
     // PHASE 2 STARTS HERE
 
@@ -474,6 +394,153 @@ public class Combined {
     }
 
 
+    // PHASE 3 STARTS HERE
+
+    // function to execute one single trial with given values of  (k, N, n, ɛ, τ, w)
+    // will return a list of pageFaults for OPT, BlindOracle, LRU, Combined
+
+    /**
+     * Executes a single trial with given values of (k, N, n, ε, τ, w).
+     *
+     * @param k          The cache size.
+     * @param N          The factor for generating the working set size.
+     * @param n          The size of the reference string.
+     * @param epsilon    The threshold for the Blind Oracle algorithm.
+     * @param tau        The threshold for adding noise to the sequence.
+     * @param w          The working set window size.
+     * @param threshold  The threshold for the Combined algorithm.
+     * @return An array containing the page faults for OPT, Blind Oracle, LRU, and Combined algorithms.
+     */
+    public static int[] singleTrial(int k, int N, int n, double epsilon, double tau, int w, double threshold){
+
+        List<Integer> sequence = generateRandomSequence(k, N, n, epsilon);
+        List<Integer> hSequence = generateH(sequence);
+        List<Integer> noisyHSequence = addNoise(hSequence, tau, w);
+        int optPageFaults = blindOracle(k, sequence, hSequence);
+        int blindPageFaults = blindOracle(k, sequence, noisyHSequence);
+        int lruPageFaults = LRU(k, sequence);
+        int combinedPageFaults = combinedAlg(k, sequence, noisyHSequence, threshold);
+
+        return new int[]{optPageFaults, blindPageFaults, lruPageFaults, combinedPageFaults};
+    }
+
+    // Function to execute trials of batch size
+    // will return a list of results for each trial
+
+    /**
+     * Function to execute trials of a given batch size and return a list of results for each trial.
+     *
+     * @param batchSize  The number of trials to execute.
+     * @param k          The cache size.
+     * @param N          The factor for generating the working set size.
+     * @param n          The size of the reference string.
+     * @param epsilon    The threshold for the Blind Oracle algorithm.
+     * @param tau        The threshold for the Combined algorithm.
+     * @param w          The working set window size.
+     * @param threshold  The threshold for the Combined algorithm.
+     * @return An array containing the total page faults for each algorithm over all trials.
+     */
+    public static int[] batchTrial(int batchSize, int k, int N, int n, double epsilon, double tau, int w, double threshold) {
+        int[] totalPageFaults = new int[4];
+        for (int i = 0; i < batchSize; i++) {
+            int[] pageFaults = singleTrial(k, N, n, epsilon, tau, w, threshold);
+            for (int j = 0; j < 4; j++) {
+                totalPageFaults[j] += pageFaults[j];
+            }
+        }
+        for (int j = 0; j < 4; j++) {
+            totalPageFaults[j] /= batchSize;
+        }
+        return totalPageFaults;
+    }
+
+
+    /** Test Functions **/
+
+    // Test function for generateRandomSequence
+    public static void testGenerateRandomSequence() {
+        // Test input parameters
+        int k = 3;
+        int N = 10;
+        int n = 7;
+        double e = 0.6;
+
+        List<Integer> seq = generateRandomSequence(k, N, n, e);
+        assert seq.size() == n : "Generated random sequence length does not match";
+
+        // Ensure the first k elements are from 1 to k
+        for (int i = 0; i < k; i++) {
+            assert seq.get(i) == i + 1 : "First k elements are not from 1 to k";
+        }
+    }
+
+    // Test case for generateH function
+    public static void testGenerateH() {
+        List<Integer> seq = List.of(1, 2, 3, 4, 14, 14, 14, 19, 4, 19);
+        List<Integer> hSeq = generateH(seq);
+
+        assert hSeq.size() == seq.size() : "Generated hSeq length does not match";
+
+        // Ensure hi values are correct
+        List<Integer> expectedHSeq = List.of(11, 11, 11, 9, 6, 6, 6, 10, 9, 10);
+        assert hSeq.equals(expectedHSeq) : "Generated hSeq values are incorrect";
+    }
+
+    // Test case for addNoise function
+    public static void testAddNoise() {
+        List<Integer> hSeq = List.of(11, 11, 11, 9, 6, 6, 6, 10, 9, 10);
+        double tau = 0.6;
+        int w = 2;
+
+        List<Integer> predictedHSeq = addNoise(hSeq, tau, w);
+
+        assert predictedHSeq.size() == hSeq.size() : "Generated predictedHSeq length does not match";
+
+        // Ensure hi values are within the expected range
+        for (int i = 0; i < hSeq.size(); i++) {
+            int lowerBound = Math.max(i + 1, hSeq.get(i) - w / 2);
+            int upperBound = lowerBound + w;
+            assert lowerBound <= predictedHSeq.get(i) && predictedHSeq.get(i) <= upperBound :
+                    "Generated predictedHSeq values are out of range";
+        }
+    }
+
+    // Test function for blindOracle Algorithm
+    public static void testBlindOracle1() {
+        // Testing for the following input parameters
+        int k = 4;
+        int N = 20;  // N >> k
+        int n = 10;
+        double e = 0.7;
+        double t = 0.2;
+        int w = 2;
+
+        List<Integer> seq = generateRandomSequence(k, N, n, e);
+        List<Integer> hSeq = generateH(seq);
+        List<Integer> noisyHSeq = addNoise(hSeq, t, w);
+
+        int pageFaults = blindOracle(k, seq, noisyHSeq);
+        System.out.println("# pageFaults for k:" + k + " N:" + N + " n:" + n + " e:" + e + " t:" + t + " w:" + w + " = " + pageFaults);
+    }
+
+    public static void testBlindOracle2() {
+        // Testing for the following input parameters
+        int k = 6;
+        int N = 20;  // N >> k
+        int n = 30;
+        double e = 0.9;
+        double t = 0.5;
+        int w = 4;
+
+        List<Integer> seq = generateRandomSequence(k, N, n, e);
+        List<Integer> hSeq = generateH(seq);
+        List<Integer> noisyHSeq = addNoise(hSeq, t, w);
+
+        int pageFaults = blindOracle(k, seq, noisyHSeq);
+        System.out.println("# pageFaults for k:" + k + " N:" + N + " n:" + n + " e:" + e + " t:" + t + " w:" + w + " = " + pageFaults);
+    }
+
+
 
     /**
      * Test function for the LRU (Least Recently Used) algorithm.
@@ -528,71 +595,52 @@ public class Combined {
     }
 
 
-    // PHASE 3 STARTS HERE
-
-    // function to execute one single trial with given values of  (k, N, n, ɛ, τ, w)
-    // will return a list of pageFaults for OPT, BlindOracle, LRU, Combined
-
-    /**
-     * Executes a single trial with given values of (k, N, n, ε, τ, w).
-     *
-     * @param k          The cache size.
-     * @param N          The factor for generating the working set size.
-     * @param n          The size of the reference string.
-     * @param epsilon    The threshold for the Blind Oracle algorithm.
-     * @param tau        The threshold for adding noise to the sequence.
-     * @param w          The working set window size.
-     * @param threshold  The threshold for the Combined algorithm.
-     * @return An array containing the page faults for OPT, Blind Oracle, LRU, and Combined algorithms.
-     */
-    public static int[] trial(int k, int N, int n, double epsilon, double tau, int w, double threshold){
-
-        List<Integer> sequence = generateRandomSequence(k, N, n, epsilon);
-        List<Integer> hSequence = generateH(sequence);
-        List<Integer> noisyHSequence = addNoise(hSequence, tau, w);
-        int optPageFaults = blindOracle(k, sequence, hSequence);
-        int blindPageFaults = blindOracle(k, sequence, noisyHSequence);
-        int lruPageFaults = LRU(k, sequence);
-        int combinedPageFaults = combinedAlg(k, sequence, noisyHSequence, threshold);
-
-        return new int[]{optPageFaults, blindPageFaults, lruPageFaults, combinedPageFaults};
-    }
-
-    // Function to execute trials of batch size
-    // will return a list of results for each trial
-
-    /**
-     * Function to execute trials of a given batch size and return a list of results for each trial.
-     *
-     * @param batchSize  The number of trials to execute.
-     * @param k          The cache size.
-     * @param N          The factor for generating the working set size.
-     * @param n          The size of the reference string.
-     * @param epsilon    The threshold for the Blind Oracle algorithm.
-     * @param tau        The threshold for the Combined algorithm.
-     * @param w          The working set window size.
-     * @param threshold  The threshold for the Combined algorithm.
-     * @return An array containing the total page faults for each algorithm over all trials.
-     */
-    public static int[] batchTrial(int batchSize, int k, int N, int n, double epsilon, double tau, int w, double threshold) {
-        int[] totalPageFaults = new int[4];
-        for (int i = 0; i < batchSize; i++) {
-            int[] pageFaults = trial(k, N, n, epsilon, tau, w, threshold);
-            for (int j = 0; j < 4; j++) {
-                totalPageFaults[j] += pageFaults[j];
-            }
-        }
-        for (int j = 0; j < 4; j++) {
-            totalPageFaults[j] /= batchSize;
-        }
-        return totalPageFaults;
-    }
 
     /**
      * Method to test and plot page faults vs. cache size (k) for various caching algorithms.
      */
-    public static void testPlotForK(){
-        String name = "k";
+    public static void test13(){
+
+        //  Varying K
+        //  LRU > BlindOracle > OPT
+        //  Regime 1
+
+        String name = "K - Regime 1";
+        List<Integer> kValues = new ArrayList<>(List.of(5,10,15,20,25,30));
+        int n = 10000;
+        double epsilon = 0.5;
+        double tau = 0.5;
+        int w = 200;
+        double threshold = 0.1;
+        int factor = 10;
+        int batchSize = 100;
+
+        List<Integer> optValues = new ArrayList<>();
+        List<Integer> blindValues = new ArrayList<>();
+        List<Integer> lruValues = new ArrayList<>();
+        List<Integer> combinedValues = new ArrayList<>();
+
+        for(int i=0; i< kValues.size(); i++){
+            int N = factor*(kValues.get(i));
+            int[] result = batchTrial(batchSize, kValues.get(i), N, n, epsilon, tau, w, threshold);
+            optValues.add(result[0]);
+            blindValues.add(result[1]);
+            lruValues.add(result[2]);
+            combinedValues.add(result[3]);
+        }
+
+        plotPageFaultsVsKorW(optValues, blindValues, lruValues, combinedValues, kValues, name);
+
+    }
+
+
+    public static void test14(){
+
+        // Varying K
+        // BlindOracle > LRU > OPT
+        // Regime 2
+
+        String name = "K - Regime 2";
         List<Integer> kValues = new ArrayList<>(List.of(5,10,15,20));
         int n = 10000;
         double epsilon = 0.7;
@@ -616,18 +664,56 @@ public class Combined {
             combinedValues.add(result[3]);
         }
 
-        plotPageFaultsVsK(optValues, blindValues, lruValues, combinedValues, kValues, name);
+        plotPageFaultsVsKorW(optValues, blindValues, lruValues, combinedValues, kValues, name);
 
     }
 
     /**
      * Method to test and plot page faults vs. working set size (w) for various caching algorithms.
      */
-    public static void testPlotForW(){
+    public static void test15(){
 
-        String name = "w";
+        // Varying w
+        // LRU > BlindOracle > OPT
+        // Regime 1
+
+        String name = "w - Regime 1";
         List<Integer> wValues = new ArrayList<>(List.of(50,100,200,500, 1000));
-        int k = 10;
+        int k = 20;
+        int n = 10000;
+        int batchSize = 100;
+        int N = 100;
+        double epsilon = 0.5;
+        double tau = 0.5;
+        double threshold = 0.1;
+
+        List<Integer> optValues = new ArrayList<>();
+        List<Integer> blindValues = new ArrayList<>();
+        List<Integer> lruValues = new ArrayList<>();
+        List<Integer> combinedValues = new ArrayList<>();
+
+        for(int i=0; i< wValues.size(); i++){
+            int[] result = batchTrial(batchSize, k, N, n, epsilon, tau, wValues.get(i), threshold);
+            optValues.add(result[0]);
+            blindValues.add(result[1]);
+            lruValues.add(result[2]);
+            combinedValues.add(result[3]);
+        }
+
+        plotPageFaultsVsKorW(optValues, blindValues, lruValues, combinedValues, wValues, name);
+
+    }
+
+
+    public static void test16(){
+
+        // Varying w
+        // BlindOracle > LRU > OPT
+        // Regime 2
+
+        String name = "w - Regime 2";
+        List<Integer> wValues = new ArrayList<>(List.of(50,100,200,500, 1000));
+        int k = 20;
         int n = 10000;
         int batchSize = 100;
         int N = 100;
@@ -648,18 +734,58 @@ public class Combined {
             combinedValues.add(result[3]);
         }
 
-        plotPageFaultsVsK(optValues, blindValues, lruValues, combinedValues, wValues, name);
+        plotPageFaultsVsKorW(optValues, blindValues, lruValues, combinedValues, wValues, name);
 
     }
 
     /**
      * Method to test and plot page faults vs. epsilon for various caching algorithms.
      */
-    public static void testPlotForEpsilon(){
+    public static void test17(){
 
-        String name = "ε";
+        // Varying epsilon
+        // LRU > BlindOracle > OPT
+        // Regime 1
+
+        String name = "ε - Regime 1";
         List<Double> epsilonValues = new ArrayList<>(List.of(0.2, 0.3, 0.4, 0.6, 0.7));
-        int k = 10;
+        int k = 20;
+        int N = 100;
+        int n = 10000;
+        int w = 200;
+        int batchSize = 100;
+        double tau = 0.5;
+        double threshold = 0.1;
+
+        List<Integer> optValues = new ArrayList<>();
+        List<Integer> blindValues = new ArrayList<>();
+        List<Integer> lruValues = new ArrayList<>();
+        List<Integer> combinedValues = new ArrayList<>();
+
+
+
+        for(int i=0; i< epsilonValues.size(); i++){
+            int[] result = batchTrial(batchSize, k, N, n, epsilonValues.get(i), tau, w, threshold);
+            optValues.add(result[0]);
+            blindValues.add(result[1]);
+            lruValues.add(result[2]);
+            combinedValues.add(result[3]);
+        }
+
+
+        plotPageFaultsVsEpsilonorTau(optValues, blindValues, lruValues, combinedValues, epsilonValues, name);
+
+    }
+
+    public static void test18(){
+
+        // Varying epsilon
+        // BlindOracle > LRU > OPT
+        // Regime 2
+
+        String name = "ε - Regime 2";
+        List<Double> epsilonValues = new ArrayList<>(List.of(0.2, 0.3, 0.4, 0.6, 0.7));
+        int k = 20;
         int N = 100;
         int n = 10000;
         int w = 200;
@@ -683,7 +809,7 @@ public class Combined {
         }
 
 
-        plotPageFaultsVsEpsilon(optValues, blindValues, lruValues, combinedValues, epsilonValues, name);
+        plotPageFaultsVsEpsilonorTau(optValues, blindValues, lruValues, combinedValues, epsilonValues, name);
 
     }
 
@@ -691,11 +817,15 @@ public class Combined {
     /**
      * Method to test and plot page faults vs. tau for various caching algorithms.
      */
-    public static void testPlotForTau(){
+    public static void test19(){
 
-        String name = "τ";
+        // Varying tau
+        // LRU > BlindOracle > OPT
+        // Regime 1
+
+        String name = "τ - regime 1";
         List<Double> tauValues = new ArrayList<>(List.of(0.45, 0.55, 0.7, 0.8, 0.9));
-        int k = 10;
+        int k = 20;
         int N = 100;
         int n = 10000;
         int w = 200;
@@ -716,7 +846,41 @@ public class Combined {
             combinedValues.add(result[3]);
         }
 
-        plotPageFaultsVsEpsilon(optValues, blindValues, lruValues, combinedValues, tauValues, name);
+        plotPageFaultsVsEpsilonorTau(optValues, blindValues, lruValues, combinedValues, tauValues, name);
+
+    }
+
+
+    public static void test20(){
+
+        // Varying tau
+        // BlindOracle > LRU > OPT
+        // Regime 2
+
+        String name = "τ - regime 2";
+        List<Double> tauValues = new ArrayList<>(List.of(0.45, 0.55, 0.7, 0.8, 0.9));
+        int k = 20;
+        int N = 100;
+        int n = 10000;
+        int w = 200;
+        int batchSize = 100;
+        double epsilon = 0.7;
+        double threshold = 0.1;
+
+        List<Integer> optValues = new ArrayList<>();
+        List<Integer> blindValues = new ArrayList<>();
+        List<Integer> lruValues = new ArrayList<>();
+        List<Integer> combinedValues = new ArrayList<>();
+
+        for(int i=0; i< tauValues.size(); i++){
+            int[] result = batchTrial(batchSize, k, N, n, epsilon, tauValues.get(i), w, threshold);
+            optValues.add(result[0]);
+            blindValues.add(result[1]);
+            lruValues.add(result[2]);
+            combinedValues.add(result[3]);
+        }
+
+        plotPageFaultsVsEpsilonorTau(optValues, blindValues, lruValues, combinedValues, tauValues, name);
 
     }
 
@@ -733,7 +897,7 @@ public class Combined {
      * @param kValues          List of cache sizes (k).
      * @param name             The name of the parameter being varied (k in this case).
      */
-    public static void plotPageFaultsVsK(List<Integer> optPageFaults, List<Integer> blindPageFaults, List<Integer> lruPageFaults, List<Integer> combinedPageFaults, List<Integer> kValues, String name) {
+    public static void plotPageFaultsVsKorW(List<Integer> optPageFaults, List<Integer> blindPageFaults, List<Integer> lruPageFaults, List<Integer> combinedPageFaults, List<Integer> kValues, String name) {
         // Create a dataset
         XYSeriesCollection dataset = new XYSeriesCollection();
 
@@ -803,7 +967,7 @@ public class Combined {
         plot.setFixedLegendItems(legendItems);
 
         // Create and set up the frame
-        JFrame frame = new JFrame("Page Faults vs. " + name + " - Regime 2");
+        JFrame frame = new JFrame("Page Faults vs. " + name);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Create chart panel and add it to frame
@@ -829,7 +993,7 @@ public class Combined {
      * @param name             The name of the parameter being varied (epsilon in this case).
      */
 
-    public static void plotPageFaultsVsEpsilon(List<Integer> optPageFaults, List<Integer> blindPageFaults, List<Integer> lruPageFaults, List<Integer> combinedPageFaults, List<Double> eValues, String name) {
+    public static void plotPageFaultsVsEpsilonorTau(List<Integer> optPageFaults, List<Integer> blindPageFaults, List<Integer> lruPageFaults, List<Integer> combinedPageFaults, List<Double> eValues, String name) {
         // Create a dataset
         XYSeriesCollection dataset = new XYSeriesCollection();
 
@@ -922,20 +1086,47 @@ public class Combined {
      */
     public static void main(String[] args) {
 
-        testGenerateRandomSequence();
-        testGenerateH();
-        testAddNoise();
-        testBlindOracle1();
-        testBlindOracle2();
-        testLRU();
-        testCombinedAlg();
-        testPhase2();
+//        testGenerateRandomSequence();
+//        testGenerateH();
+//        testAddNoise();
+//        testBlindOracle1();
+//        testBlindOracle2();
+//        testLRU();
+//        testCombinedAlg();
+//        testPhase2();
 
-        testPlotForK();
-        testPlotForW();
-        testPlotForEpsilon();
-        testPlotForTau();
+        int numOfThreads = 8;
+        ExecutorService executorService = Executors.newFixedThreadPool(numOfThreads);
 
+        //Trend 1 - Page Faults vs K
+        executorService.submit(Combined::test13);
+        executorService.submit(Combined::test14);
+
+        //Trend 2 - Page Faults vs W
+        executorService.submit(Combined::test15);
+        executorService.submit(Combined::test16);
+
+        //Trend 3 - Page Faults vs Epsilon
+        executorService.submit(Combined::test17);
+        executorService.submit(Combined::test18);
+
+        //Trend 1 - Page Faults vs Tau
+        executorService.submit(Combined::test19);
+        executorService.submit(Combined::test20);
+
+        // Shutdown the executor and wait for the tasks to complete
+        executorService.shutdown();
+
+        try{
+            if(!executorService.awaitTermination(1, TimeUnit.HOURS)){
+                // Forcefully shutdown if tasks exceed timeout
+                executorService.shutdown();
+            }
+        } catch (InterruptedException e) {
+            // Forcefully shutdown if the thread was interrupted
+            executorService.shutdown();
+            Thread.currentThread().interrupt();
+        }
 
     }
 }
