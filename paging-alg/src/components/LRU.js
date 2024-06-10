@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSpring, animated } from 'react-spring';
+import styles from './algorithm.css'
+
 
 const LRU = ({ k, seq }) => {
     const [pageFaults, setPageFaults] = useState(0);
@@ -40,11 +42,11 @@ const LRU = ({ k, seq }) => {
     };
 
     return (
-        <div className="algorithm-simulator">
+        <div className={styles.algorithm_simulator}>
             <h2>LRU</h2>
-            <div className="cache-container">
+            <div className={styles.cache_container}>
                 {cache.map((page, index) => (
-                    <animated.div key={index} className="cache-page" style={springs}>
+                    <animated.div key={index} className={styles.cache_page} style={springs}>
                         {page}
                     </animated.div>
                 ))}

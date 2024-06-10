@@ -1,9 +1,9 @@
 'use client';   
 import { useState } from 'react';
-import LRU from '../components/LRU';
-import BlindOracle from '../components/BlindOracle';
-import Combined from '../components/Combined';
-import Footer from '../components/Footer';
+import LRU from '../../components/LRU';
+import BlindOracle from '../../components/BlindOracle';
+import Combined from '../../components/Combined';
+import Footer from '../../components/Footer';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 
@@ -19,10 +19,10 @@ export default function Home() {
 
     return (
         <div>
-            <div className="algorithm-section">
+            {/* <div className="algorithm-section">
                 <LRU k={params.k} seq={params.input} />
-                {/* <BlindOracle k={params.k} seq={params.input} hSeq={params.hSeq}/>
-                <Combined k={params.k} seq={params.input} hSeq={params.hSeq} thr={params.thr} /> */}
+                <BlindOracle k={params.k} seq={params.input} hSeq={params.hSeq}/>
+                <Combined k={params.k} seq={params.input} hSeq={params.hSeq} thr={params.thr} />
             </div>
             <Footer onSimulate={handleSimulate} />
 
@@ -30,7 +30,7 @@ export default function Home() {
                 <Button variant="text">Text</Button>
                 <Button variant="contained">Contained</Button>
                 <Button variant="outlined">Outlined</Button>
-            </Stack>
+            </Stack> */}
         </div>
     );
 }
