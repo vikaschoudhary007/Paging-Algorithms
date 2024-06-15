@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Grid from "@mui/system/Unstable_Grid";
+import Button from "@mui/material/Button";
 
 export default function Body() {
   return (
@@ -58,6 +59,9 @@ export default function Body() {
             label="thr"
             variant="outlined"
           />
+        </Grid>
+        <Grid xs={12} container justifyContent={"center"}>
+          <Button variant="contained">Simulate</Button>
         </Grid>
       </Grid>
     </>
