@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import CssBaseline from "@mui/material/CssBaseline";
 import Container from "@mui/material/Container";
-import Navbar from "./components/Navbar";
+import Navbar from "./components/navbar";
 import Body from "./components/body";
 
 export default function Dashboard() {
