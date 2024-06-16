@@ -5,8 +5,17 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
+import { useData } from "../../../context/GlobalContext";
 
 export default function Navbar() {
+
+  // use this state variable for global use (context)
+  const {data, setData} = useData();
+
+  React.useEffect(() => {
+    setData((prevData : typeof data) => ({...prevData, count: 0}));
+  },[])
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
@@ -23,6 +32,8 @@ export default function Navbar() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Paging Simulation
           </Typography>
+          <p>{data.name}</p>
+          <>{data.count}</>
         </Toolbar>
       </AppBar>
     </Box>
