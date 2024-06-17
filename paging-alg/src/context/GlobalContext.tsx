@@ -19,11 +19,14 @@ const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const [data, setData] = useState<AlgoParameters>({
     k: 2,
-    input: [1, 2, 3],
-    epsilon: 2,
-    tau: 2,
-    w: 2,
-    thr: 2,
+    input: "1,2,3",
+    epsilon: 0.7,
+    tau: 0.3,
+    w: 200,
+    thr: 0.3,
+    lruPageFaults: 0,
+    blindPageFaults: 0,
+    combinedPageFaults: 0
   });
   
   return (

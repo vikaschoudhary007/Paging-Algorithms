@@ -12,9 +12,12 @@ export interface DataType {
 
 export interface AlgoParameters {
     k: number;
-    input : number[];
+    input : string;
     epsilon : number;
     tau: number;
     w: number;
     thr:number;
+    lruPageFaults: number;
+    blindPageFaults: number;
+    combinedPageFaults: number;
 }
